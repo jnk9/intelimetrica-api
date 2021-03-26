@@ -1,3 +1,4 @@
+require 'descriptive_statistics'
 class Api::RestaurantsController < ApplicationController
   before_action :restaurants_all, only: [:index]
   before_action :find_restaurant, only: [:show]
@@ -53,6 +54,20 @@ class Api::RestaurantsController < ApplicationController
 
   rescue StandardError => e
     render json: { state: :error, message: e.message }, status: :bad_request
+  end
+
+  def statistics
+    statistics = Restaurant.within(params[:radius].to_i.meters.to.kilometers.value, :origin => [params[:latitude], params[:longitude]])
+    ratings = statistics.pluck(:rating)
+
+    render json: {
+      count: ratings.number,
+      avg: ratings.mean,
+      std: ratings.standard_deviation,
+      mode: ratings.mode,
+      min: ratings.min,
+      max: ratings.max
+    }
   end
 
   private
